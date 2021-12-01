@@ -1,20 +1,9 @@
 fun main() {
-    fun part1(input: List<String>): Int = if (input.isEmpty()) 0
-    else {
-        var prev = input.first().toInt()
-        input
-            .map { it.toInt() }
-            .drop(1)
-            .count {
-                if (it > prev) {
-                    prev = it
-                    true
-                } else {
-                    prev = it
-                    false
-                }
-            }
-    }
+    fun part1(input: List<String>): Int = input
+        .map { it.toInt() }
+        .foldIndexed(Pair(0, 0))
+        { index, (count, prev): Pair<Int, Int>, i -> Pair(count + (if (index > 0 && i > prev) 1 else 0), i) }
+        .first
 
 
     fun part2(input: List<String>): Int {
