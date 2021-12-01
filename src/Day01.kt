@@ -14,20 +14,18 @@ data class Measurement(val value: Int)
 fun main() {
     fun part1(input: List<String>): Int = input
         .map { Measurement(it.toInt()) }
-        .foldIndexed(Pair(Counter(0), Measurement(0)))
-        { index, (counter, prev), curr -> Pair(counter + (if (index > 0 && curr.value > prev.value) 1 else 0), curr) }
-        .first.value
+        .foldIndexed(Counter(0) to Measurement(0))
+        { index, (counter, prev), curr ->
+            counter + (if (index > 0 && curr.value > prev.value) 1 else 0) to curr
+        }.first.value
 
     fun part2(input: List<String>): Int = input
         .map { it.toInt() }
-        .foldIndexed(Pair(Counter(0), ThreeMeasurement(0, 0, 0)))
+        .map { it.toInt() }
+        .foldIndexed(Counter(0) to ThreeMeasurement(0, 0, 0))
         { index, (counter, prev), i ->
-            Pair(
-                counter + (if (index > 2 && prev.slide(i).getSum() > prev.getSum()) 1 else 0),
-                prev.slide(i)
-            )
-        }
-        .first.value
+            counter + (if (index > 2 && prev.slide(i).getSum() > prev.getSum()) 1 else 0) to prev.slide(i)
+        }.first.value
 
     // test if implementation meets criteria from the description, like:
     val testInput = readInput("Day01_test")
