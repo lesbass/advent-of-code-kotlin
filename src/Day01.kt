@@ -21,7 +21,6 @@ fun main() {
 
     fun part2(input: List<String>): Int = input
         .map { it.toInt() }
-        .map { it.toInt() }
         .foldIndexed(Counter(0) to ThreeMeasurement(0, 0, 0))
         { index, (counter, prev), i ->
             counter + (if (index > 2 && prev.slide(i).getSum() > prev.getSum()) 1 else 0) to prev.slide(i)
