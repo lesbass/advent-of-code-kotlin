@@ -1,27 +1,6 @@
-data class ThreeMeasurement(val first: Int, val second: Int, val third: Int) {
-    fun slide(newThird: Int): ThreeMeasurement = ThreeMeasurement(this.second, this.third, newThird)
-    fun getSum() = first + second + third
+package day01
 
-    companion object {
-        fun initial() = ThreeMeasurement(0, 0, 0)
-    }
-}
-
-data class Counter(val value: Int) {
-    operator fun plus(increment: Int): Counter {
-        return Counter(value + increment)
-    }
-
-    companion object {
-        fun initial() = Counter(0)
-    }
-}
-
-data class Measurement(val value: Int) {
-    companion object {
-        fun initial() = Measurement(0)
-    }
-}
+import readInput
 
 fun main() {
     fun part1(input: List<String>): Int = input
@@ -41,10 +20,36 @@ fun main() {
         }.first.value
 
     // test if implementation meets criteria from the description, like:
-    val testInput = readInput("Day01_test")
+    val testInput = readInput("day01/Day01_test")
     check(part2(testInput) == 5)
 
-    val input = readInput("Day01")
+    val input = readInput("day01/Day01")
     println(part1(input))
     println(part2(input))
+}
+
+
+data class Counter(val value: Int) {
+    operator fun plus(increment: Int): Counter {
+        return Counter(value + increment)
+    }
+
+    companion object {
+        fun initial() = Counter(0)
+    }
+}
+
+data class Measurement(val value: Int) {
+    companion object {
+        fun initial() = Measurement(0)
+    }
+}
+
+data class ThreeMeasurement(val first: Int, val second: Int, val third: Int) {
+    fun slide(newThird: Int): ThreeMeasurement = ThreeMeasurement(this.second, this.third, newThird)
+    fun getSum() = first + second + third
+
+    companion object {
+        fun initial() = ThreeMeasurement(0, 0, 0)
+    }
 }
