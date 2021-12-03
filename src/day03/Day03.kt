@@ -7,43 +7,43 @@ fun main() {
 
     fun extractNumberAtPosition(input: String, index: Int) = input[index].toString().toInt()
 
-    fun getAverageValueAtPosition(input: List<String>, index: Int) =
-        input.map { extractNumberAtPosition(it, index) }.average().roundToInt()
+    fun List<String>.getAverageValueAtPosition(index: Int) =
+        map { extractNumberAtPosition(it, index) }.average().roundToInt()
 
-    fun getAverageValueAtPositionInverted(input: List<String>, index: Int) =
-        if (getAverageValueAtPosition(input, index) == 1) 0 else 1
+    fun List<String>.getAverageValueAtPositionInverted(index: Int) =
+        getAverageValueAtPosition(index) xor 1
 
-    fun getIntFromBinaryString(input: List<Int>) = input.joinToString("").toInt(2)
+    fun List<Int>.getIntFromBinaryString() = joinToString("").toInt(2)
 
-    fun findOxygenGeneratorRating(input: List<String>, prev: String = ""): String =
-        input.filter { it.startsWith(prev) }.let {
-            return@findOxygenGeneratorRating if (it.size == 1) it.first()
-            else findOxygenGeneratorRating(
-                input, prev + getAverageValueAtPosition(
-                    it, prev.length
-                )
+    fun List<String>.findOrNext(block: (List<String>) -> String): String =
+        if (size == 1) first() else block(this)
+
+    fun List<String>.findRating(prev: String = "", block: (List<String>) -> String): String =
+        filter { it.startsWith(prev) }.findOrNext(block)
+
+    fun List<String>.findOxygenGeneratorRating(prev: String = ""): String =
+        findRating(prev) {
+            it.findOxygenGeneratorRating(
+                prev + it.getAverageValueAtPosition(prev.length)
             )
         }
 
-    fun findCO2ScrubberRating(input: List<String>, prev: String = ""): String =
-        input.filter { it.startsWith(prev) }.let {
-            return@findCO2ScrubberRating if (it.size == 1) it.first()
-            else findCO2ScrubberRating(
-                input, prev + getAverageValueAtPositionInverted(
-                    it, prev.length
-                )
+    fun List<String>.findCO2ScrubberRating(prev: String = ""): String =
+        findRating(prev) {
+            it.findCO2ScrubberRating(
+                prev + it.getAverageValueAtPositionInverted(prev.length)
             )
         }
 
     fun getGammaRate(input: List<String>) =
-        getIntFromBinaryString(input.first().indices.map { index -> getAverageValueAtPosition(input, index) })
+        input.first().indices.map { input.getAverageValueAtPosition(it) }.getIntFromBinaryString()
 
     fun getEpsilonRate(input: List<String>) =
-        getIntFromBinaryString(input.first().indices.map { index -> getAverageValueAtPositionInverted(input, index) })
+        input.first().indices.map { input.getAverageValueAtPositionInverted(it) }.getIntFromBinaryString()
 
-    fun getOxygenGeneratorRating(input: List<String>) = findOxygenGeneratorRating(input).toInt(2)
+    fun getOxygenGeneratorRating(input: List<String>) = input.findOxygenGeneratorRating().toInt(2)
 
-    fun getCO2ScrubberRating(input: List<String>) = findCO2ScrubberRating(input).toInt(2)
+    fun getCO2ScrubberRating(input: List<String>) = input.findCO2ScrubberRating().toInt(2)
 
     fun part1(input: List<String>) = getGammaRate(input) * getEpsilonRate(input)
 
