@@ -3,21 +3,25 @@ package day01
 import readInput
 
 fun main() {
+    fun Pair<Counter, Measurement>.getCounterValue() = first.value
+    fun Pair<Counter, ThreeMeasurement>.getCounterValue() = first.value
+
     fun part1(input: List<String>): Int = input
         .map { Measurement(it.toInt()) }
         .foldIndexed(Counter.initial() to Measurement.initial())
         { index, (counter, prevMeasure), currMeasure ->
-            counter + (if (index > 0 && currMeasure.value > prevMeasure.value) 1 else 0) to currMeasure
-        }.first.value
+            counter.increaseIfTrue(index > 0 && currMeasure.value > prevMeasure.value) to currMeasure
+        }.getCounterValue()
 
     fun part2(input: List<String>): Int = input
         .map { it.toInt() }
         .foldIndexed(Counter.initial() to ThreeMeasurement.initial())
         { index, (counter, prevMeasure), currMeasure ->
-            counter + (if (index > 2 && prevMeasure.slide(currMeasure)
+            counter.increaseIfTrue(
+                index > 2 && prevMeasure.slide(currMeasure)
                     .getSum() > prevMeasure.getSum()
-            ) 1 else 0) to prevMeasure.slide(currMeasure)
-        }.first.value
+            ) to prevMeasure.slide(currMeasure)
+        }.getCounterValue()
 
     // test if implementation meets criteria from the description, like:
     val testInput = readInput("day01/Day01_test")
@@ -30,9 +34,7 @@ fun main() {
 
 
 data class Counter(val value: Int) {
-    operator fun plus(increment: Int): Counter {
-        return Counter(value + increment)
-    }
+    fun increaseIfTrue(expr: Boolean) = Counter(value + (if (expr) 1 else 0))
 
     companion object {
         fun initial() = Counter(0)
