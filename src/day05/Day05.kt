@@ -61,8 +61,7 @@ data class LineOfVent(val start: Coordinates, val end: Coordinates) {
     private fun deltaY() = end.y - start.y
     private fun stepX() = step(deltaX())
     private fun stepY() = step(deltaY())
-    private fun step(it: Int) = if (it == 0) 0 else (it / abs(it))
-
+    private fun step(it: Int) = it / length()
 
     companion object {
         fun fromRawData(input: String) = input.split("->").let {
