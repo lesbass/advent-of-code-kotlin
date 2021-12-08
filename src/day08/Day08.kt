@@ -27,28 +27,30 @@ fun main() {
     fun String.deltaFrom(str: String) =
         count { c -> !str.contains(c) }
 
-    fun guessNumber(acc: Map<Int, String>, item: String) = acc + (when (item.length) {
+    fun String.sortString() = toList().sortedBy { it }.joinToString("")
+
+    fun Map<String, Int>.findByValue(value: Int) = filterValues { it == value }.keys.first()
+
+    fun guessNumber(dict: Map<String, Int>, item: String) = dict + (item.sortString() to (when (item.length) {
         6 -> (when {
-            acc[4]!!.overlapsWith(item) -> 9
-            acc[7]!!.overlapsWith(item) -> 0
+            dict.findByValue(4).overlapsWith(item) -> 9
+            dict.findByValue(7).overlapsWith(item) -> 0
             else -> 6
         })
         5 -> (when {
-            acc[7]!!.overlapsWith(item) -> 3
-            acc[9]!!.deltaFrom(item) == 1 -> 5
+            dict.findByValue(7).overlapsWith(item) -> 3
+            dict.findByValue(9).deltaFrom(item) == 1 -> 5
             else -> 2
         })
         else -> -1
-    } to item)
-
-    fun String.sortString() = toList().sortedBy { it }.joinToString("")
+    }))
 
     fun findUniqueSegmentsLength() =
         workingDisplay.keys.groupBy { it.length }.filter { it.value.size == 1 }.map { it.key }
 
     fun List<String>.getCertainNumbers() = filter { findUniqueSegmentsLength().contains(it.length) }
-        .fold(mapOf<Int, String>()) { acc, x ->
-            acc + mapOf(workingDisplay.filter { it.key.length == x.length }.values.first() to x)
+        .fold(mapOf<String, Int>()) { dict, item ->
+            dict + mapOf(item.sortString() to workingDisplay.filter { it.key.length == item.length }.values.first())
         }
 
     fun List<String>.getUncertainNumbers() = filter { !findUniqueSegmentsLength().contains(it.length) }
@@ -56,7 +58,6 @@ fun main() {
 
     fun List<String>.getTranslationDictionary() = getUncertainNumbers()
         .fold(getCertainNumbers(), ::guessNumber)
-        .map { (number, segment) -> segment.sortString() to number }
         .toMap()
 
     fun Map<String, Int>.mapDictionaryToData(data: List<String>) = data.map { this[it.sortString()] }
