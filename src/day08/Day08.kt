@@ -27,10 +27,11 @@ fun main() {
     fun Map<String, Int>.findByValue(value: Int) = filterValues { it == value }.keys.first()
     fun Map<String, Int>.findByLength(length: Int) = filterKeys { it.length == length }.values.first()
 
-    fun findUniqueSegmentsLength() =
-        workingDisplay.keys.groupBy { it.length }.filter { it.value.size == 1 }.map { it.key }
-
-    fun Int.isUniqueSegmentsLength() = findUniqueSegmentsLength().contains(this)
+    fun Int.isUniqueSegmentsLength() = workingDisplay.keys
+        .groupBy { it.length }
+        .filter { it.value.size == 1 }
+        .map { it.key }
+        .contains(this)
 
     fun guessNumber(wipDictionary: Map<String, Int>, currentSegment: String) =
         currentSegment.length.let { segmentLength ->
@@ -51,7 +52,7 @@ fun main() {
         }
 
     fun List<String>.getTranslationDictionary() =
-        sortedWith(compareBy<String> { !findUniqueSegmentsLength().contains(it.length) }
+        sortedWith(compareBy<String> { !it.length.isUniqueSegmentsLength() }
             .thenByDescending { it.length }
         ).fold(mapOf(), ::guessNumber)
 
@@ -65,7 +66,7 @@ fun main() {
     fun part1(input: List<String>) = input
         .parseData()
         .flatMap { it.actualData }
-        .count { findUniqueSegmentsLength().contains(it.length) }
+        .count { it.length.isUniqueSegmentsLength() }
 
     fun part2(input: List<String>) = input
         .parseData()
