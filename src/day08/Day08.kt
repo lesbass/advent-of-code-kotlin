@@ -35,7 +35,7 @@ fun main() {
 
     fun guessNumber(wipDictionary: Map<String, Int>, currentSegment: String) =
         currentSegment.length.let { segmentLength ->
-            wipDictionary + (currentSegment to (when {
+            wipDictionary + (currentSegment to when {
                 segmentLength.isUniqueSegmentsLength() -> workingDisplay.findByLength(segmentLength)
                 segmentLength == 6 -> when {
                     wipDictionary.findByValue(4).overlapsWith(currentSegment) -> 9
@@ -48,7 +48,7 @@ fun main() {
                     else -> 2
                 }
                 else -> -1
-            }))
+            })
         }
 
     fun List<String>.getTranslationDictionary() =
