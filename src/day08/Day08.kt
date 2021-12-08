@@ -23,7 +23,7 @@ fun main() {
         .map { Display(it[0].getDataFromRaw(), it[1].getDataFromRaw()) }
 
     fun String.overlapsWith(str: String) = all { str.contains(it) }
-    fun String.deltaFrom(str: String) = count { !str.contains(it) }
+    fun String.singleDifferenceFrom(str: String) = count { !str.contains(it) } == 1
     fun Map<String, Int>.findByValue(value: Int) = filterValues { it == value }.keys.first()
     fun Map<String, Int>.findByLength(length: Int) = filterKeys { it.length == length }.values.first()
 
@@ -34,21 +34,21 @@ fun main() {
         .contains(this)
 
     fun guessNumber(wipDictionary: Map<String, Int>, currentSegment: String) =
-        currentSegment.length.let { segmentLength ->
-            wipDictionary + (currentSegment to when {
-                segmentLength.isUniqueSegmentsLength() -> workingDisplay.findByLength(segmentLength)
-                segmentLength == 6 -> when {
+        wipDictionary + currentSegment.length.let {
+            currentSegment to when {
+                it.isUniqueSegmentsLength() -> workingDisplay.findByLength(it)
+                it == 6 -> when {
                     wipDictionary.findByValue(4).overlapsWith(currentSegment) -> 9
                     wipDictionary.findByValue(7).overlapsWith(currentSegment) -> 0
                     else -> 6
                 }
-                segmentLength == 5 -> when {
+                it == 5 -> when {
                     wipDictionary.findByValue(7).overlapsWith(currentSegment) -> 3
-                    wipDictionary.findByValue(9).deltaFrom(currentSegment) == 1 -> 5
+                    wipDictionary.findByValue(9).singleDifferenceFrom(currentSegment) -> 5
                     else -> 2
                 }
                 else -> -1
-            })
+            }
         }
 
     fun List<String>.getTranslationDictionary() =
