@@ -17,61 +17,55 @@ val workingDisplay = mapOf(
 
 fun main() {
 
-    fun String.getDataFromRaw() = trim().split(" ")
+    fun String.sortString() = toList().sorted().joinToString("")
+    fun String.getDataFromRaw() = trim().split(" ").map { it.sortString() }
     fun List<String>.parseData() = map { it.split("|") }
         .map { Display(it[0].getDataFromRaw(), it[1].getDataFromRaw()) }
 
-    fun String.overlapsWith(str: String) =
-        all { c -> str.contains(c) }
-
-    fun String.deltaFrom(str: String) =
-        count { c -> !str.contains(c) }
-
-    fun String.sortString() = toList().sortedBy { it }.joinToString("")
-
+    fun String.overlapsWith(str: String) = all { str.contains(it) }
+    fun String.deltaFrom(str: String) = count { !str.contains(it) }
     fun Map<String, Int>.findByValue(value: Int) = filterValues { it == value }.keys.first()
-
-    fun guessNumber(dict: Map<String, Int>, item: String) = dict + (item.sortString() to (when (item.length) {
-        6 -> (when {
-            dict.findByValue(4).overlapsWith(item) -> 9
-            dict.findByValue(7).overlapsWith(item) -> 0
-            else -> 6
-        })
-        5 -> (when {
-            dict.findByValue(7).overlapsWith(item) -> 3
-            dict.findByValue(9).deltaFrom(item) == 1 -> 5
-            else -> 2
-        })
-        else -> -1
-    }))
+    fun Map<String, Int>.findByLength(length: Int) = filterKeys { it.length == length }.values.first()
 
     fun findUniqueSegmentsLength() =
         workingDisplay.keys.groupBy { it.length }.filter { it.value.size == 1 }.map { it.key }
 
-    fun List<String>.getCertainNumbers() = filter { findUniqueSegmentsLength().contains(it.length) }
-        .fold(mapOf<String, Int>()) { dict, item ->
-            dict + mapOf(item.sortString() to workingDisplay.filter { it.key.length == item.length }.values.first())
+    fun Int.isUniqueSegmentsLength() = findUniqueSegmentsLength().contains(this)
+
+    fun guessNumber(wipDictionary: Map<String, Int>, currentSegment: String) =
+        currentSegment.length.let { segmentLength ->
+            wipDictionary + (currentSegment to (when {
+                segmentLength.isUniqueSegmentsLength() -> workingDisplay.findByLength(segmentLength)
+                segmentLength == 6 -> when {
+                    wipDictionary.findByValue(4).overlapsWith(currentSegment) -> 9
+                    wipDictionary.findByValue(7).overlapsWith(currentSegment) -> 0
+                    else -> 6
+                }
+                segmentLength == 5 -> when {
+                    wipDictionary.findByValue(7).overlapsWith(currentSegment) -> 3
+                    wipDictionary.findByValue(9).deltaFrom(currentSegment) == 1 -> 5
+                    else -> 2
+                }
+                else -> -1
+            }))
         }
 
-    fun List<String>.getUncertainNumbers() = filter { !findUniqueSegmentsLength().contains(it.length) }
-        .sortedByDescending { it.length }
+    fun List<String>.getTranslationDictionary() =
+        sortedWith(compareBy<String> { !findUniqueSegmentsLength().contains(it.length) }
+            .thenByDescending { it.length }
+        ).fold(mapOf(), ::guessNumber)
 
-    fun List<String>.getTranslationDictionary() = getUncertainNumbers()
-        .fold(getCertainNumbers(), ::guessNumber)
-        .toMap()
-
-    fun Map<String, Int>.mapDictionaryToData(data: List<String>) = data.map { this[it.sortString()] }
+    fun Map<String, Int>.translateDataToNumber(data: List<String>) = data.map { this[it] }
+        .joinToString("").toInt()
 
     fun Display.getData() = testData
         .getTranslationDictionary()
-        .mapDictionaryToData(actualData)
-        .joinToString("").toInt()
+        .translateDataToNumber(actualData)
 
     fun part1(input: List<String>) = input
         .parseData()
         .flatMap { it.actualData }
-        .filter { findUniqueSegmentsLength().contains(it.length) }
-        .size
+        .count { findUniqueSegmentsLength().contains(it.length) }
 
     fun part2(input: List<String>) = input
         .parseData()
