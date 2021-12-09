@@ -17,7 +17,7 @@ val workingDisplay = mapOf(
 
 fun main() {
 
-    fun String.sortString() = toList().sorted().joinToString("")
+    fun String.sortString() = asIterable().sorted().joinToString("")
     fun String.getDataFromRaw() = trim().split(" ").map { it.sortString() }
     fun List<String>.parseData() = map { it.split("|") }
         .map { Display(it[0].getDataFromRaw(), it[1].getDataFromRaw()) }
