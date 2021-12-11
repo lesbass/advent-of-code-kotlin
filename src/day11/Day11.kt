@@ -13,8 +13,7 @@ fun main() {
             return newBoard.flashAndCount(flashes + flash)
         } ?: (this to flashes)
 
-    fun Board.applyStep(flashes: Int = 0): Pair<Board, Int> =
-        map { it.raiseLevel() }.flashAndCount(flashes)
+    fun Board.applyStep(flashes: Int = 0) = map { it.raiseLevel() }.flashAndCount(flashes)
 
     fun Board.isAllFlashing() = all { it.energyLevel == 0 }
 
@@ -23,8 +22,8 @@ fun main() {
             board.applyStep(flashes)
         }
 
-    fun Board.findAllFlashing(steps: Int = 0) : Int =
-        if(!isAllFlashing()) applyStep().first.findAllFlashing(steps + 1)
+    fun Board.findAllFlashing(steps: Int = 0): Int =
+        if (!isAllFlashing()) applyStep().first.findAllFlashing(steps + 1)
         else steps
 
     fun part1(input: List<String>) = input.parseData().applySteps(100).second
@@ -43,23 +42,21 @@ fun main() {
 
 data class Octopus(val position: Coordinates, val energyLevel: Int) {
     fun willFlash() = energyLevel > 9
-    fun flashMe(fullData: Board) = if (willFlash())
-        raiseSurrounding(fullData).replace(copy(energyLevel = 0)) to 1
-    else fullData to 0
+    fun flashMe(fullData: Board) =
+        if (willFlash()) raiseSurrounding(fullData).replace(copy(energyLevel = 0)) to 1
+        else fullData to 0
 
     fun raiseLevel(onlyIfNotFlashed: Boolean = false) =
         if (onlyIfNotFlashed && energyLevel == 0) this
         else copy(energyLevel = energyLevel + 1)
 
-    private fun raiseSurrounding(fullData: Board) = getSurrounding(fullData).fold(fullData) { acc, item ->
-        acc.replace(item.raiseLevel(true))
-    }
+    private fun raiseLevel(acc: Board, item: Octopus) = acc.replace(item.raiseLevel(true))
+    private fun raiseSurrounding(fullData: Board) = getSurrounding(fullData).fold(fullData, ::raiseLevel)
 
     private fun getSurrounding(fullData: Board) =
-        position.getSurrounding(fullData.maxOf { it.position.x + 1 }, fullData.maxOf { it.position.y + 1 })
-            .let { positions ->
-                fullData.filter { positions.contains(it.position) }
-            }
+        position.getSurrounding(fullData).let { positions ->
+            fullData.filter { positions.contains(it.position) }
+        }
 
     private fun Board.replace(octopus: Octopus) =
         map {
@@ -68,7 +65,7 @@ data class Octopus(val position: Coordinates, val energyLevel: Int) {
 }
 
 data class Coordinates(val x: Int, val y: Int) {
-    fun getSurrounding(width: Int, height: Int) = listOf(
+    fun getSurrounding(board: Board) = listOf(
         Coordinates(x - 1, y + 1),
         Coordinates(x - 1, y),
         Coordinates(x - 1, y - 1),
@@ -77,7 +74,10 @@ data class Coordinates(val x: Int, val y: Int) {
         Coordinates(x + 1, y + 1),
         Coordinates(x + 1, y),
         Coordinates(x + 1, y - 1),
-    ).filter { x > -1 && x < width && y > -1 && y < height }
+    ).filter { x > -1 && x < board.getWidth() && y > -1 && y < board.getHeight() }
+
+    private fun Board.getHeight() = maxOf { it.position.y + 1 }
+    private fun Board.getWidth() = maxOf { it.position.x + 1 }
 }
 
 typealias Board = List<Octopus>
