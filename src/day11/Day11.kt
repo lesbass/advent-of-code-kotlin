@@ -15,41 +15,19 @@ fun main() {
         row.asIterable().mapIndexed { colId, p -> Octopus(Coordinates(colId, rowId), p.toString().toInt()) }
     }.flatten()
 
+    fun Board.flashAndCount(flashes: Int = 0): Pair<Board, Int> =
+        firstOrNull { it.willFlash() }?.flashMe(this)?.let { (newBoard, flash) ->
+            return newBoard.flashAndCount(flashes + flash)
+        } ?: (this to flashes)
+
     fun Board.applyStep(): Pair<Board, Int> =
-        map { it.raiseLevel() }
-            .let { board ->
-                var b = board
-                var flashes = 0
-                while (b.any { it.willFlash() }) {
-                    b.first { it.willFlash() }.flashMe(b).let { (newBoard, flash) ->
-                        b = newBoard
-                        flashes += flash
-                    }
-                }
-                b to flashes
-            }
+        map { it.raiseLevel() }.flashAndCount()
 
     fun Board.isAllFlashing() = all { it.energyLevel == 0 }
 
     fun Board.applySteps(n: Int) =
-        (1..n).fold(this to 0) { (board, flashes), step ->
+        (1..n).fold(this to 0) { (board, flashes), _ ->
             board.applyStep().let { x ->
-                fun printBoard() {
-                    (0..x.first.maxOf { c -> c.position.y }).forEach { pY ->
-                        (0..x.first.maxOf { c -> c.position.x }).forEach { pX ->
-                            fun Int.printEnergyLevel() = toString().padStart(3).let {
-                                if (this > 0) it
-                                else ANSI_GREEN + it + ANSI_RESET
-                            }
-                            print(
-                                x.first.first { c -> c.position == Coordinates(pX, pY) }.energyLevel.printEnergyLevel()
-                            )
-                        }
-                        println()
-                    }
-                    println("step $step: flashes: $flashes")
-                }
-                // printBoard()
                 x.first to x.second + flashes
             }
         }
@@ -70,6 +48,7 @@ fun main() {
     val testInput = readInput("day11/Day11")
     part1(testInput).apply {
         println(this)
+        assert(this == 1683)
     }
     part2(testInput).apply {
         println(this)
