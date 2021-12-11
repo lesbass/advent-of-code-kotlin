@@ -15,13 +15,6 @@ fun main() {
         row.asIterable().mapIndexed { colId, p -> Octopus(Coordinates(colId, rowId), p.toString().toInt()) }
     }.flatten()
 
-    fun List<Pair<Octopus, Boolean>>.parseStepResult() =
-        map { octopus -> octopus.first } to count { octopus -> octopus.second }
-
-
-    fun Board.getCurrentElement(octopus: Octopus) =
-        first { it.position == octopus.position }
-
     fun Board.applyStep(): Pair<Board, Int> =
         map { it.raiseLevel() }
             .let { board ->
@@ -35,40 +28,52 @@ fun main() {
                 }
                 b to flashes
             }
-    //.map { it.tryFlash() }
-    //.parseStepResult()
+
+    fun Board.isAllFlashing() = all { it.energyLevel == 0 }
 
     fun Board.applySteps(n: Int) =
         (1..n).fold(this to 0) { (board, flashes), step ->
             board.applyStep().let { x ->
-                (0..x.first.maxOf { c -> c.position.y }).forEach { pY ->
-                    (0..x.first.maxOf { c -> c.position.x }).forEach { pX ->
-                        fun Int.printEnergyLevel() = toString().padStart(3).let {
-                            if (this > 0) it
-                            else ANSI_GREEN + it + ANSI_RESET
+                fun printBoard() {
+                    (0..x.first.maxOf { c -> c.position.y }).forEach { pY ->
+                        (0..x.first.maxOf { c -> c.position.x }).forEach { pX ->
+                            fun Int.printEnergyLevel() = toString().padStart(3).let {
+                                if (this > 0) it
+                                else ANSI_GREEN + it + ANSI_RESET
+                            }
+                            print(
+                                x.first.first { c -> c.position == Coordinates(pX, pY) }.energyLevel.printEnergyLevel()
+                            )
                         }
-                        print(
-                            x.first.first { c -> c.position == Coordinates(pX, pY) }.energyLevel.printEnergyLevel()
-                        )
+                        println()
                     }
-                    println()
+                    println("step $step: flashes: $flashes")
                 }
-                println("step $step: flashes: $flashes")
+                // printBoard()
                 x.first to x.second + flashes
             }
         }
 
-    fun part1(input: List<String>) = input.parseData().applySteps(3).second
-    fun part2(input: List<String>) = input.size
+    fun Board.findAllFlashing(): Int {
+        var b = this
+        var i = 0
+        while (!b.isAllFlashing()) {
+            b = b.applyStep().first
+            i++
+        }
+        return i
+    }
 
+    fun part1(input: List<String>) = input.parseData().applySteps(100).second
+    fun part2(input: List<String>) = input.parseData().findAllFlashing()
 
-    val testInput = readInput("day11/Day11_test")
+    val testInput = readInput("day11/Day11")
     part1(testInput).apply {
         println(this)
     }
-//    part2(testInput).apply {
-//        println(this)
-//    }
+    part2(testInput).apply {
+        println(this)
+    }
 }
 
 data class Octopus(val position: Coordinates, val energyLevel: Int) {
@@ -79,21 +84,12 @@ data class Octopus(val position: Coordinates, val energyLevel: Int) {
         }.replace(copy(energyLevel = 0)) to 1
     else fullData to 0
 
-    //fun tryFlash() = flashMe() to willFlash()
-
     fun raiseLevel(onlyIfNotFlashed: Boolean = false) =
         if (onlyIfNotFlashed && energyLevel == 0) this
         else copy(energyLevel = energyLevel + 1)
 
-    /*fun addSurroundingFlashes(fullData: Board) =
-        getSurrounding(fullData)
-            .count { it.willFlash() }
-            .let {
-                if (it > 0) copy(energyLevel = energyLevel + it) else this
-            }*/
-
     private fun getSurrounding(fullData: Board) =
-        position.getSurrounding(fullData.maxOf { it.position.x }, fullData.maxOf { it.position.y })
+        position.getSurrounding(fullData.maxOf { it.position.x + 1 }, fullData.maxOf { it.position.y + 1 })
             .let { positions ->
                 fullData.filter { positions.contains(it.position) }
             }
