@@ -5,17 +5,16 @@ import readInput
 typealias Segment = Pair<Cavern, Cavern>
 typealias Path = List<Cavern>
 
-
 fun main() {
 
-    fun List<String>.parseData(): List<Segment> = map {
+    fun List<String>.parseData() = map {
         it.split("-").let { (first, second) ->
             Cavern.fromRawData(first) to Cavern.fromRawData(second)
         }
     }
 
-    fun filterOutUsedSmallCaverns(currentPath: Path, n: Int): List<Cavern> =
-        currentPath.filter { it.isSmall }.let { smallCaverns ->
+    fun filterOutUsedSmallCaverns(currentPath: Path, n: Int) =
+        currentPath.filter { it.size == CavernSize.SMALL }.let { smallCaverns ->
             when {
                 smallCaverns.groupBy { it }.any { it.value.size > n } -> smallCaverns.distinct()
                 else -> listOf()
@@ -24,35 +23,35 @@ fun main() {
 
     fun List<Segment>.computePaths(start: Cavern, allowedSmallSegments: Int, currentPath: Path = listOf()): List<Path> =
         filter { (first) -> first == start }
-            .map {
-                (currentPath + it.second).let { newPath ->
+            .flatMap { (_, currentCavern) ->
+                (currentPath + currentCavern).let { newPath ->
                     when {
-                        it.second.isEnd -> listOf(newPath)
-                        it.second.isSmall -> filter { s ->
-                            !filterOutUsedSmallCaverns(newPath, allowedSmallSegments).contains(s.second)
-                        }.computePaths(it.second, allowedSmallSegments, newPath)
-                        else -> computePaths(it.second, allowedSmallSegments, newPath)
+                        currentCavern.position == CavernPosition.END -> listOf(newPath)
+                        currentCavern.size == CavernSize.SMALL -> filter { (_, end) ->
+                            !filterOutUsedSmallCaverns(newPath, allowedSmallSegments).contains(end)
+                        }.computePaths(currentCavern, allowedSmallSegments, newPath)
+                        else -> computePaths(currentCavern, allowedSmallSegments, newPath)
                     }
                 }
-            }.flatten()
+            }
 
     fun Pair<Cavern, Cavern>.getReturnTrip() = second to first
 
     fun List<Segment>.addReturnTrips() = flatMap {
         when {
-            it.first.isStart || it.second.isEnd -> listOf(it)
-            it.first.isEnd || it.second.isStart -> listOf(it.getReturnTrip())
+            it.first.position == CavernPosition.START || it.second.position == CavernPosition.END -> listOf(it)
+            it.first.position == CavernPosition.END || it.second.position == CavernPosition.START -> listOf(it.getReturnTrip())
             else -> listOf(it, it.getReturnTrip())
         }
     }
 
-    fun List<Segment>.findStart() = map { it.first }.first { it.isStart }
+    fun List<Segment>.findStart() = map { it.first }.first { it.position == CavernPosition.START }
 
-    fun part1(input: List<String>) = input.parseData().addReturnTrips()
-        .let { it.computePaths(it.findStart(), 0) }.size
+    fun execute(input: List<String>, allowedSmallSegments: Int) = input.parseData().addReturnTrips()
+        .let { it.computePaths(it.findStart(), allowedSmallSegments) }.size
 
-    fun part2(input: List<String>) = input.parseData().addReturnTrips()
-        .let { it.computePaths(it.findStart(), 1) }.size
+    fun part1(input: List<String>) = execute(input, 0)
+    fun part2(input: List<String>) = execute(input, 1)
 
     val testInput = readInput("day12/Day12")
     part1(testInput).apply {
@@ -65,9 +64,31 @@ fun main() {
     }
 }
 
-data class Cavern(val name: String, val isSmall: Boolean, val isStart: Boolean = false, val isEnd: Boolean = false) {
+data class Cavern(val name: String, val size: CavernSize, val position: CavernPosition) {
     companion object {
         fun fromRawData(data: String) =
-            Cavern(data, data.first().isLowerCase(), data == "start", data == "end")
+            Cavern(data, getCavernSize(data), getCavernPosition(data))
+
+        private fun getCavernSize(data: String) = when {
+            data.first().isLowerCase() -> CavernSize.SMALL
+            else -> CavernSize.BIG
+        }
+
+        private fun getCavernPosition(data: String) = when (data) {
+            "start" -> CavernPosition.START
+            "end" -> CavernPosition.END
+            else -> CavernPosition.REGULAR
+        }
     }
+}
+
+enum class CavernSize {
+    BIG,
+    SMALL
+}
+
+enum class CavernPosition {
+    START,
+    END,
+    REGULAR
 }
