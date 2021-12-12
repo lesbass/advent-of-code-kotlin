@@ -5,14 +5,6 @@ import readInput
 typealias Segment = Pair<Cavern, Cavern>
 typealias Path = List<Cavern>
 
-data class Cavern(val name: String, val isSmall: Boolean, val isStart: Boolean = false, val isEnd: Boolean = false) {
-    companion object {
-        fun fromRawData(data: String) =
-            Cavern(data, data.first().isLowerCase(), data == "start", data == "end")
-    }
-
-    override fun toString(): String = name
-}
 
 fun main() {
 
@@ -22,14 +14,25 @@ fun main() {
         }
     }
 
-    fun List<Segment>.computePaths(start: Cavern, currentPath: Path = listOf()): List<Path> =
+    fun filterOutUsedSmallCaverns(currentPath: Path, n: Int): List<Cavern> =
+        currentPath.filter { it.isSmall }.let { smallCaverns ->
+            when {
+                smallCaverns.groupBy { it }.any { it.value.size > n } -> smallCaverns.distinct()
+                else -> listOf()
+            }
+        }
+
+    fun List<Segment>.computePaths(start: Cavern, allowedSmallSegments: Int, currentPath: Path = listOf()): List<Path> =
         filter { (first) -> first == start }
             .map {
-                when {
-                    it.second.isEnd -> listOf(currentPath + it.second)
-                    it.second.isSmall -> filter { s -> s.second != it.second }
-                        .computePaths(it.second, currentPath + it.second)
-                    else -> computePaths(it.second, currentPath + it.second)
+                (currentPath + it.second).let { newPath ->
+                    when {
+                        it.second.isEnd -> listOf(newPath)
+                        it.second.isSmall -> filter { s ->
+                            !filterOutUsedSmallCaverns(newPath, allowedSmallSegments).contains(s.second)
+                        }.computePaths(it.second, allowedSmallSegments, newPath)
+                        else -> computePaths(it.second, allowedSmallSegments, newPath)
+                    }
                 }
             }.flatten()
 
@@ -46,17 +49,25 @@ fun main() {
     fun List<Segment>.findStart() = map { it.first }.first { it.isStart }
 
     fun part1(input: List<String>) = input.parseData().addReturnTrips()
-        .let { it.computePaths(it.findStart()) }.size
+        .let { it.computePaths(it.findStart(), 0) }.size
 
-    fun part2(input: List<String>) = input.size
+    fun part2(input: List<String>) = input.parseData().addReturnTrips()
+        .let { it.computePaths(it.findStart(), 1) }.size
 
     val testInput = readInput("day12/Day12")
     part1(testInput).apply {
         println(this)
         assert(this == 3856)
     }
-//    part2(testInput).apply {
-//        println(this)
-//        assert(this == 788)
-//    }
+    part2(testInput).apply {
+        println(this)
+        assert(this == 116692)
+    }
+}
+
+data class Cavern(val name: String, val isSmall: Boolean, val isStart: Boolean = false, val isEnd: Boolean = false) {
+    companion object {
+        fun fromRawData(data: String) =
+            Cavern(data, data.first().isLowerCase(), data == "start", data == "end")
+    }
 }
