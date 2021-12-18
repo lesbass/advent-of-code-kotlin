@@ -1,13 +1,15 @@
 fun main() {
-    fun part1(input: List<String>): Int = input.size
+    fun part1(input: List<String>) = input.size
 
-    fun part2(input: List<String>): Int = input.size
+    fun part2(input: List<String>) = input.size
 
-    // test if implementation meets criteria from the description, like:
-    val testInput = readInput("Day01_test")
-    check(part1(testInput) == 5)
-
-    val input = readInput("day01")
-    println(part1(input))
-    println(part2(input))
+    val testInput = readInput("dayXX/DayXX")
+    part1(testInput).apply {
+        println(this)
+        check(this == 8)
+    }
+    part2(testInput).apply {
+        println(this)
+        check(this == 8)
+    }
 }
