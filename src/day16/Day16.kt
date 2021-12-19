@@ -32,13 +32,10 @@ fun List<Char>.getLiteral(num: String = ""): Pair<Long, List<Char>> =
 
 fun List<Char>.getSubPacketLengthDataLength() = if (first() == '0') 15 else 11
 
-fun processSubPacket(i: Char, processingData: List<Char>, subPacketsLengthValue: Int) =
-    if (i == '0') {
-        processingData.take(subPacketsLengthValue).readPackets().first to processingData.drop(
-            subPacketsLengthValue
-        )
-    } else {
-        processingData.readPackets(subPacketsLengthValue)
+fun processSubPacket(subType: Char, data: List<Char>, length: Int) =
+    when (subType) {
+        '0' -> data.take(length).readPackets().first to data.drop(length)
+        else -> data.readPackets(length)
     }
 
 fun List<Char>.getSubPackets(): Pair<List<Packet>, List<Char>> =
